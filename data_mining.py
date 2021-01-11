@@ -8,6 +8,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import numpy as np
+import csv
 
 
 # In[10]:
@@ -255,6 +256,9 @@ def getOHE(genres):
 gameLabel = {}
 for index, row in df.iterrows():
     
+    if index == 9:
+        break
+
     #Incase you want to start from a later index use this and change the 0 value
     if index < 0:
         continue
@@ -265,6 +269,9 @@ for index, row in df.iterrows():
     URL = row['url']
     genre = row['popular_tags'].split(',') + row['genre'].split(',')
     name = row['name'].replace(" ","_").replace('/','_')
+
+    if len(name) > 200:
+        continue
 
     ohe = getOHE(genre)
     gameLabel[name] = ohe
@@ -286,23 +293,12 @@ for index, row in df.iterrows():
         print("Deleting from labels")
         if name in gameLabel.keys():
             del gameLabel[name]
+        continue
     
     file = open("game_images/"+name+'.png', "wb")
     file.write(response.content)
     file.close()
 
-
-# In[ ]:
-
-
-import csv
-with open('gameLabels.csv', 'w') as f:
-    for key in gameLabel.keys():
-        f.write("%s,%s\n"%(key,gameLabel[key]))
-
-
-# In[ ]:
-
-
-
-
+    file = open('gameLabels.csv', 'a')
+    file.write("%s,%s\n"%(name,gameLabel[name]))
+    file.close()
