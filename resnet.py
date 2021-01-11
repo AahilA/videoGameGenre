@@ -44,7 +44,7 @@ class ResNet(nn.Module):
         )
 
         self.relu = nn.ReLU()
-        self.max_pool = nn.MaxPool2d(3,2) #wtf these numbers be
+        self.max_pool = nn.MaxPool2d(3,2)
 
         #Resnet Layers
         self.layer1 = self._make_layer(block, 3, 64, 1)
@@ -53,7 +53,8 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 3, 512, 2)
 
         self.avg_pool = nn.AvgPool2d(4)
-        self.fc = nn.Linear(512, num_classes)
+
+        self.fc = nn.Linear(1536, num_classes)
 
 
     def _make_layer(self, block, num_blocks, out_chan, stride):
@@ -71,6 +72,8 @@ class ResNet(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.relu(x)
+
+        #Pooling
         x = self.max_pool(x)
 
         #Resnet
@@ -79,6 +82,7 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
+        #Pooling
         x = self.avg_pool(x)
         x = x.reshape(x.shape[0], -1)
 
@@ -88,9 +92,9 @@ class ResNet(nn.Module):
 
 
 def test():
-    net = ResNet(block)
-    y = net(torch.randn(1, 3, 128, 128))
+    net = ResNet(block, 10)
+    y = net(torch.randn(1, 3, 460, 216))
     print(y.size())
     print(y)
 
-# test()
+test()
