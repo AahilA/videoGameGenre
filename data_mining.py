@@ -298,5 +298,7 @@ for index, row in df.iterrows():
     file.close()
 
     file = open('gameLabels.csv', 'a')
-    file.write("%s,%s\n"%(name,gameLabel[name]))
+    file.write("%s,"%(name))
+    gameLabel[name].tofile(file, sep=',')
+    file.write("\n")
     file.close()
