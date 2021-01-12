@@ -265,7 +265,7 @@ for index, row in df.iterrows():
     
     URL = row['url']
     genre = row['popular_tags'].split(',') + row['genre'].split(',')
-    name = row['name'].replace(" ","_").replace('/','_')
+    name = row['name'].replace(" ","_").replace('/','_').replace(',','_')
 
     if len(name) > 200:
         continue
