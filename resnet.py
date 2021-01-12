@@ -88,7 +88,7 @@ class ResNet(nn.Module):
 
 
 def testRunning():
-    net = ResNet(block, 70)
+    net = ResNet(block, 65)
     y = net(torch.randn(1, 3, 256, 256))
     print(y.size())
     print(y)
