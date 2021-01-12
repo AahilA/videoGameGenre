@@ -6,15 +6,11 @@ import torch.nn as nn
 class block(nn.Module):
     def __init__(self, in_chan, out_chan, stride=1):
         super(block,self).__init__()
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_chan, out_chan, kernel_size=3, stride=stride, padding=1, bias=False),
-            nn.BatchNorm2d(out_chan)
-        )
+        self.conv1 = nn.Conv2d(in_chan, out_chan, kernel_size=3, stride=stride, padding=1, bias=False)
 
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(out_chan, out_chan, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(out_chan)
-        )
+        self.bn = nn.BatchNorm2d(out_chan)
+
+        self.conv2 = nn.Conv2d(out_chan, out_chan, kernel_size=3, stride=1, padding=1, bias=False)
 
         self.relu = nn.ReLU()
 
@@ -26,8 +22,8 @@ class block(nn.Module):
             )
 
     def forward(self, x):
-        out = self.relu(self.conv1(x))
-        out = self.conv2(out)
+        out = self.relu(self.bn(self.conv1(x)))
+        out = self.bn(self.conv2(out))
         out += self.shortcut(x)
         out = self.relu(out)
         return out
@@ -52,9 +48,9 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 6, 256, 2)
         self.layer4 = self._make_layer(block, 3, 512, 2)
 
-        self.avg_pool = nn.AvgPool2d(4)
+        self.avg_pool = nn.AvgPool2d(8)
 
-        self.fc = nn.Linear(1536, num_classes)
+        self.fc = nn.Linear(512, num_classes)
 
 
     def _make_layer(self, block, num_blocks, out_chan, stride):
@@ -91,10 +87,10 @@ class ResNet(nn.Module):
         return x
 
 
-def test():
-    net = ResNet(block, 10)
-    y = net(torch.randn(1, 3, 460, 216))
+def testRunning():
+    net = ResNet(block, 70)
+    y = net(torch.randn(1, 3, 256, 256))
     print(y.size())
     print(y)
 
-test()
+testRunning()

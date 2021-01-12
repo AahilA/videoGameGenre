@@ -241,7 +241,7 @@ def getOHE(genres):
     ohe = np.zeros(len(genreMap))
     for genre in set(genres):
         if genre in genreMap.keys():
-            ohe[genreMap[genre]] = 1;
+            ohe[genreMap[genre]] = 1
     return ohe
 
 
@@ -255,9 +255,6 @@ def getOHE(genres):
 #Downloading all the images and creating the CSV Label
 gameLabel = {}
 for index, row in df.iterrows():
-    
-    if index == 9:
-        break
 
     #Incase you want to start from a later index use this and change the 0 value
     if index < 0:
@@ -290,6 +287,7 @@ for index, row in df.iterrows():
         response = requests.get(r.get("src"))
     except:
         print("Error fetching game " + name)
+        print(URL)
         print("Deleting from labels")
         if name in gameLabel.keys():
             del gameLabel[name]
