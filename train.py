@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from skimage import io, transform
+from skimage import color, io, transform
 
 
 
@@ -41,6 +41,10 @@ class GameImagesDataset(Dataset):
         label = label.astype('float').reshape(-1, self.num_class).flatten()
 
         image = transform.resize(image, (256,256))
+
+        if len(image.shape) < 3:
+            image = color.gray2rgb(image)
+
         image = torch.from_numpy(image.transpose((2, 0, 1)))
 
         sample = (image,label)
