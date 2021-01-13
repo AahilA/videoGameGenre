@@ -118,7 +118,7 @@ def main(train_loader, test_loader, model, optimizer):
     
     print(f'Epoch 0: Train Loss {trloss}')
 
-    for epoch in range(5):
+    for epoch in range(100):
         trloss = train(train_loader, model, criterion, optimizer)
         _ = test(test_loader, model, criterion)
 
