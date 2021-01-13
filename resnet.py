@@ -22,7 +22,7 @@ class block(nn.Module):
             )
 
     def forward(self, x):
-        out = self.conv1(self.bn(self.relu(x)))
+        out = self.relu(self.bn(self.conv1(x)))
         out = self.bn(self.conv2(out))
         out += self.shortcut(x)
         out = self.relu(out)
@@ -93,4 +93,4 @@ def testRunning():
     print(y.size())
     print(y)
 
-# testRunning()
+testRunning()
