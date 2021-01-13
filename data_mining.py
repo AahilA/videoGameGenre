@@ -262,6 +262,7 @@ for index, row in df.iterrows():
     
     if index % 100 == 0:
         print(index/df.shape[0])
+        print(index)
     
     URL = row['url']
     genre = row['popular_tags'].split(',') + row['genre'].split(',')
