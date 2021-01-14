@@ -245,10 +245,6 @@ def getOHE(genres):
     return ohe
 
 
-# # Instructions for peter
-# ### Run all the cells one by one and then wait. This should download all the images and place them in a folder and it should generate a csv in the last cell of the game name and one hot vector. 
-# Also if u can think of a faster way to download images (maybe first download all from web then write all of them to disk idk if thats faster) that would be great.
-
 # In[ ]:
 
 
@@ -267,12 +263,13 @@ for index, row in df.iterrows():
     URL = row['url']
     genre = row['popular_tags'].split(',') + row['genre'].split(',')
     name = row['name'].replace(" ","_").replace('/','_').replace(',','_')
+    game_no = "game" + str(index)
 
     if len(name) > 200:
         continue
 
     ohe = getOHE(genre)
-    gameLabel[name] = ohe
+    gameLabel[game_no] = ohe
     
 #     print(index)
 #     print(URL)
@@ -290,16 +287,24 @@ for index, row in df.iterrows():
         print("Error fetching game " + name)
         print(URL)
         print("Deleting from labels")
-        if name in gameLabel.keys():
-            del gameLabel[name]
+        if game_no in gameLabel.keys():
+            del gameLabel[game_no]
         continue
+    if response.status_code == 404:
+        print("Bad Image " + name)
+        print(URL)
+        print("Deleting from labels")
+        if game_no in gameLabel.keys():
+            del gameLabel[game_no]
+        continue
+
     
-    file = open("game_images/"+name+'.png', "wb")
+    file = open("game_images/" + game_no + '.jpg', "wb")
     file.write(response.content)
     file.close()
 
     file = open('gameLabels.csv', 'a')
-    file.write("%s,"%(name))
-    gameLabel[name].tofile(file, sep=',')
+    file.write("%s,%s,"%(game_no,name))
+    gameLabel[game_no].tofile(file, sep=',')
     file.write("\n")
     file.close()

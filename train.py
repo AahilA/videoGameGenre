@@ -4,8 +4,6 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from skimage import color, io, transform
 
-
-
 import resnet
 
 import pandas as pd
@@ -34,9 +32,10 @@ class GameImagesDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        img_name = self.rootf + self.gameLabels.iloc[idx,0] + '.png'
+        img_name = self.rootf + self.gameLabels.iloc[idx,0] + '.jpg'
+        print(img_name)
         image = io.imread(img_name)
-        label = self.gameLabels.iloc[idx, 1:]
+        label = self.gameLabels.iloc[idx, 2:]
         label = np.array([label])
         label = label.astype('float').reshape(-1, self.num_class).flatten()
 
@@ -83,10 +82,8 @@ def train(train_loader, model, criterion, optimizer):
 
     for _, (images, labels) in enumerate(train_loader):
         # Run the forward pass
-        print(labels.shape)
 
         outputs = model(images.float())
-        print(labels.shape, outputs.shape, images.shape)
 
         loss = criterion(outputs, labels)
         loss_list.append(loss.item())
