@@ -173,6 +173,7 @@ def main(train_loader, test_loader, model, optimizer):
     
     list_train_loss.append(trloss)
     list_train_acc.append(tracc)
+    list_test_acc.append(testacc)
     
     print(f'Epoch 0: Train Loss {trloss}, Train Accuracy {tracc}, Test Accuracy {testacc}')
 
@@ -188,6 +189,19 @@ def main(train_loader, test_loader, model, optimizer):
         
     return list_train_loss,list_train_acc,list_test_acc
 
+def save_accuracy(train_losses, train_accuracies, test_accuracies):
+    outfile = open("accuracies.csv", "w")
+    outfile.write("train_losses, train_accuracies, test_accuracies\n")
+    for i in range(len(train_losses)):
+        outfile.write(str(train_losses[i]))
+        outfile.write(",")
+        outfile.write(str(train_accuracies[i]))
+        outfile.write(",")
+        outfile.write(str(test_accuracies[i]))
+        outfile.write("\n")
+    outfile.close()
+
+
 print("building model...")
 model = resnet.ResNet(resnet.block, 65).float()
 model.cuda()
@@ -195,6 +209,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_dec
 criterion = nn.L1Loss()
 
 train_losses,train_accuracies,test_accuracies = main(train_loader, test_loader, model, optimizer)
+save_accuracy(train_losses, train_accuracies, test_accuracies)
 
 torch.save(model.state_dict(),'gameModel')
 
