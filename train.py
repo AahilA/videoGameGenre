@@ -33,7 +33,7 @@ class GameImagesDataset(Dataset):
             idx = idx.tolist()
 
         img_name = self.rootf + self.gameLabels.iloc[idx,0] + '.jpg'
-        print(img_name)
+        # print(img_name)
         image = io.imread(img_name)
         label = self.gameLabels.iloc[idx, 2:]
         label = np.array([label])
@@ -45,9 +45,7 @@ class GameImagesDataset(Dataset):
             image = color.gray2rgb(image)
 
         image = torch.from_numpy(image.transpose((2, 0, 1)))
-
         sample = (image,label)
-
         return sample
 
 game_dataset = GameImagesDataset('game_images/', 'gameLabels.csv', 65)
@@ -68,72 +66,135 @@ for i in range(len(game_dataset)):
 train_size = int(0.8 * len(game_dataset))
 test_size = len(game_dataset) - train_size
 train_dataset, test_dataset = torch.utils.data.random_split(game_dataset, [train_size, test_size])
+print(train_size, test_size)
 
-
-train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers=0)
-test_loader = DataLoader(test_dataset, batch_size=256, shuffle=False, num_workers=0)
+train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
 
 def Average(lst): 
     return sum(lst) / len(lst) 
 
+def accuracy(outputs, labels):
+    outputs = outputs.flatten()
+    labels = labels.flatten()
+    cor = True
+    for i in range(len(outputs)):
+        if outputs[i] >= 0.5 and labels[i] == 0:
+            cor = False
+            return cor
+        if outputs[i] < 0.5 and labels[i] == 1:
+            cor = False
+            return cor
+    return cor
+           
+
 def train(train_loader, model, criterion, optimizer):
+    print("training...")
     model.train()
     loss_list = []
+    total = 0
+    correct = 0
+#    softmax = nn.LogSoftmax(dim=1)
 
-    for _, (images, labels) in enumerate(train_loader):
+    for k, (images, labels) in enumerate(train_loader):
         # Run the forward pass
-
+        print("loading image: " + str(k * 128))
+        images = images.cuda()
+        labels = labels.cuda()
         outputs = model(images.float())
 
+#        outputs = softmax(outputs)
+#        print("outputs:")
+#        print(outputs)
+#        print("labels:")
+#        print(labels)
         loss = criterion(outputs, labels)
+#        print(str(k) + ":" + str(loss.item()))
         loss_list.append(loss.item())
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    
-    return Average(loss_list)
+        b = outputs.clone()
+        for i in range(len(b)):
+            for j in range(len(b[0])):
+                if b[i][j] >= 0.5:
+                    b[i][j] = 1
+                else:
+                    b[i][j] = 0
+        total += int(labels.size(1)*labels.size(0))
+#        print("predicted:")
+#        print(predicted)
+        correct += int(b.eq(labels).sum().item())
+        del b
+    print(correct, total)
+    acc = 100. * correct / total
+    return Average(loss_list),acc
 
 def test(test_loader, model, criterion):
+    print("testing...")
     with torch.no_grad():
         model.eval()
         loss_list = []
-        acc_list = []
+        total = 0
+        correct = 0
+#        softmax = nn.LogSoftmax(dim=1)
 
         for _, (images, labels) in enumerate(test_loader):
             # Run the forward pass
+            images = images.cuda()
+            labels = labels.cuda()
             outputs = model(images.float())
+#            outputs = softmax(outputs)
             loss = criterion(outputs, labels)
             loss_list.append(loss.item())
-    
-    return Average(loss_list)
+            b = outputs.clone()
+            for i in range(len(b)):
+                for j in range(len(b[0])):
+                    if b[i][j] >= 0.5:
+                        b[i][j] = 1
+                    else:
+                        b[i][j] = 0
+            total += int(labels.size(1)*labels.size(0))
+            correct += int(b.eq(labels).sum().item())
+            del b
+    acc = 100. * correct / total
+
+    return Average(loss_list),acc
 
 def main(train_loader, test_loader, model, optimizer):
     
     list_train_loss = []
-
-    trloss = train(train_loader, model, criterion, optimizer)
-    _ = test(test_loader, model, criterion)
+    list_train_acc = []
+    list_test_acc = []
+    print("start training...")
+    trloss,tracc = train(train_loader, model, criterion, optimizer)
+    _,testacc = test(test_loader, model, criterion)
     
     list_train_loss.append(trloss)
+    list_train_acc.append(tracc)
     
-    print(f'Epoch 0: Train Loss {trloss}')
+    print(f'Epoch 0: Train Loss {trloss}, Train Accuracy {tracc}, Test Accuracy {testacc}')
 
     for epoch in range(100):
-        trloss = train(train_loader, model, criterion, optimizer)
-        _ = test(test_loader, model, criterion)
+        trloss,tracc = train(train_loader, model, criterion, optimizer)
+        _,testacc = test(test_loader, model, criterion)
 
         list_train_loss.append(trloss)
+        list_train_acc.append(tracc)
+        list_test_acc.append(testacc)
         
-        print(f'Epoch {epoch + 1}: Train Loss {trloss}')
+        print(f'Epoch {epoch + 1}: Train Loss {trloss}, Train Accuracy {tracc}, Test Accuracy {testacc}')
         
-    return list_train_loss
+    return list_train_loss,list_train_acc,list_test_acc
 
+print("building model...")
 model = resnet.ResNet(resnet.block, 65).float()
+model.cuda()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0001)
 criterion = nn.L1Loss()
 
-train_losses = main(train_loader, test_loader, model, optimizer)
+train_losses,train_accuracies,test_accuracies = main(train_loader, test_loader, model, optimizer)
 
 torch.save(model.state_dict(),'gameModel')
 
