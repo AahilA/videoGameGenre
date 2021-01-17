@@ -75,18 +75,17 @@ def Average(lst):
     return sum(lst) / len(lst) 
 
 def accuracy(outputs, labels):
-    outputs = outputs.flatten()
-    labels = labels.flatten()
-    cor = True
-    for i in range(len(outputs)):
-        if outputs[i] >= 0.5 and labels[i] == 0:
-            cor = False
-            return cor
-        if outputs[i] < 0.5 and labels[i] == 1:
-            cor = False
-            return cor
-    return cor
-           
+    b = outputs.clone()
+    for i in range(len(b)):
+        for j in range(len(b[0])):
+            if b[i][j] >= 0.5:
+                b[i][j] = 1
+            else:
+                b[i][j] = 0
+    total = int(labels.size(1)*labels.size(0))
+    correct = int(b.eq(labels).sum().item())
+    del b
+    return total, correct
 
 def train(train_loader, model, criterion, optimizer):
     print("training...")
@@ -115,18 +114,9 @@ def train(train_loader, model, criterion, optimizer):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        b = outputs.clone()
-        for i in range(len(b)):
-            for j in range(len(b[0])):
-                if b[i][j] >= 0.5:
-                    b[i][j] = 1
-                else:
-                    b[i][j] = 0
-        total += int(labels.size(1)*labels.size(0))
-#        print("predicted:")
-#        print(predicted)
-        correct += int(b.eq(labels).sum().item())
-        del b
+        totalt,correctt = accuracy(outputs, labels)
+        total += totalt
+        correct += correctt
     print(correct, total)
     acc = 100. * correct / total
     return Average(loss_list),acc
@@ -148,16 +138,9 @@ def test(test_loader, model, criterion):
 #            outputs = softmax(outputs)
             loss = criterion(outputs, labels)
             loss_list.append(loss.item())
-            b = outputs.clone()
-            for i in range(len(b)):
-                for j in range(len(b[0])):
-                    if b[i][j] >= 0.5:
-                        b[i][j] = 1
-                    else:
-                        b[i][j] = 0
-            total += int(labels.size(1)*labels.size(0))
-            correct += int(b.eq(labels).sum().item())
-            del b
+            totalt, correctt = accuracy(outputs, labels)
+            total += totalt
+            correct += correctt
     acc = 100. * correct / total
 
     return Average(loss_list),acc
