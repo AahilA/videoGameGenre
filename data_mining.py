@@ -232,6 +232,9 @@ genreMap = {}
 for index, genre in enumerate(genreSet):
     genreMap[genre] = index
 
+print(genreMap)
+exit(0)
+
 
 # In[17]:
 
